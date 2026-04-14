@@ -1,0 +1,39 @@
+name: Patch framework.jar
+
+on:
+  workflow_dispatch:
+    inputs:
+      framework_url:
+        description: 'Direct download URL to your framework.jar (Google Drive direct link or any public file host)'
+        required: true
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Java and tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y openjdk-17-jre zip unzip wget
+
+      - name: Download your framework.jar
+        run: |
+          wget -O framework_patcher/framework.jar "${{ github.event.inputs.framework_url }}"
+          echo "Downloaded. Size: $(du -sh framework_patcher/framework.jar)"
+
+      - name: Run patcher
+        run: |
+          cd framework_patcher
+          chmod +x patchframework.sh
+          ./patchframework.sh
+
+      - name: Upload patched framework.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-patched
+          path: framework_patcher/framework.jar
+          retention-days: 7
